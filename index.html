@@ -4,37 +4,282 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Personal Finance Tracker</title>
-    <link rel="stylesheet" href="styles.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            transition: background-color 0.3s;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            text-align: center;
+        }
+
+        h1 {
+            margin-bottom: 20px;
+        }
+
+        form input, form select, form button {
+            padding: 10px;
+            margin: 5px;
+            width: 80%;
+            font-size: 1rem;
+        }
+
+        button {
+            cursor: pointer;
+        }
+
+        #transaction-list {
+            margin-top: 20px;
+            width: 100%;
+            text-align: left;
+        }
+
+        .transaction {
+            padding: 10px;
+            border: 1px solid #ccc;
+            margin: 5px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .transaction.expense {
+            background-color: #f8d7da;
+        }
+
+        .transaction.income {
+            background-color: #d4edda;
+        }
+
+        #monthly-summary {
+            margin-top: 30px;
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        #pie-chart {
+            max-width: 100%;
+            height: auto;
+            margin-top: 20px;
+        }
+
+        .theme-button {
+            margin-top: 20px;
+            padding: 10px;
+            cursor: pointer;
+            background-color: #333;
+            color: white;
+        }
+
+        .dark-mode {
+            background-color: #333;
+            color: white;
+        }
+
+        .light-mode {
+            background-color: #fff;
+            color: black;
+        }
+
+        .custom-mode {
+            background-color: #4b6cb7;
+            color: white;
+        }
+
+        .transaction-actions button {
+            margin-left: 10px;
+            cursor: pointer;
+            padding: 5px;
+            background-color: #ff6f61;
+            color: white;
+            border: none;
+        }
+
+        .transaction-actions button:hover {
+            background-color: #f44336;
+        }
+    </style>
 </head>
 <body>
     <div class="container">
         <h1>Personal Finance Tracker</h1>
-        
+
         <!-- Income and Expense Form -->
         <form id="finance-form">
             <input type="text" id="description" placeholder="Description" required>
             <input type="number" id="amount" placeholder="Amount" required>
+            <select id="category">
+                <option value="salary">Salary</option>
+                <option value="freelance">Freelance</option>
+                <option value="shopping">Shopping</option>
+                <option value="bills">Bills</option>
+                <option value="groceries">Groceries</option>
+            </select>
             <select id="type">
                 <option value="income">Income</option>
                 <option value="expense">Expense</option>
             </select>
-            <button type="submit">Add</button>
+            <button type="submit">Add Transaction</button>
         </form>
 
-        <!-- Monthly Savings -->
-        <div class="savings">
-            <h2>Monthly Savings</h2>
-            <p id="monthly-savings">$0</p>
+        <!-- Monthly Summary -->
+        <div id="monthly-summary">
+            <p>Total Income: $<span id="total-income">0</span></p>
+            <p>Total Expense: $<span id="total-expense">0</span></p>
+            <p>Monthly Savings: $<span id="monthly-savings">0</span></p>
         </div>
+
+        <!-- Transaction List -->
+        <div id="transaction-list"></div>
 
         <!-- Pie Chart -->
         <canvas id="pie-chart"></canvas>
 
-        <!-- Dark Mode Toggle -->
-        <button id="toggle-theme">Toggle Dark Mode</button>
+        <!-- Theme Buttons -->
+        <button class="theme-button" id="toggle-theme">Toggle Light/Dark Mode</button>
+        <button class="theme-button" id="custom-theme">Custom Mode</button>
     </div>
 
-    <script src="script.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        const form = document.getElementById('finance-form');
+        const descriptionInput = document.getElementById('description');
+        const amountInput = document.getElementById('amount');
+        const categoryInput = document.getElementById('category');
+        const typeInput = document.getElementById('type');
+        const monthlySavingsText = document.getElementById('monthly-savings');
+        const totalIncomeText = document.getElementById('total-income');
+        const totalExpenseText = document.getElementById('total-expense');
+        const transactionList = document.getElementById('transaction-list');
+        const pieChartCanvas = document.getElementById('pie-chart');
+        const toggleThemeButton = document.getElementById('toggle-theme');
+        const customThemeButton = document.getElementById('custom-theme');
+
+        let transactions = JSON.parse(localStorage.getItem('transactions')) || [];
+        let monthlySavings = 0;
+
+        function updateTransactionList() {
+            transactionList.innerHTML = '';
+            transactions.forEach((transaction, index) => {
+                const transactionDiv = document.createElement('div');
+                transactionDiv.classList.add('transaction', transaction.type);
+                transactionDiv.innerHTML = `
+                    <span>${transaction.description} | $${transaction.amount} | ${transaction.category}</span>
+                    <div class="transaction-actions">
+                        <button onclick="deleteTransaction(${index})">Delete</button>
+                        <button onclick="editTransaction(${index})">Edit</button>
+                    </div>
+                `;
+                transactionList.appendChild(transactionDiv);
+            });
+        }
+
+        function updateMonthlySummary() {
+            const income = transactions.filter(t => t.type === 'income').reduce((acc, t) => acc + t.amount, 0);
+            const expense = transactions.filter(t => t.type === 'expense').reduce((acc, t) => acc + t.amount, 0);
+            monthlySavings = income - expense;
+
+            totalIncomeText.textContent = income.toFixed(2);
+            totalExpenseText.textContent = expense.toFixed(2);
+            monthlySavingsText.textContent = monthlySavings.toFixed(2);
+
+            updatePieChart();
+        }
+
+        function updatePieChart() {
+            const incomes = transactions.filter(t => t.type === 'income').reduce((acc, t) => acc + t.amount, 0);
+            const expenses = transactions.filter(t => t.type === 'expense').reduce((acc, t) => acc + t.amount, 0);
+
+            const data = {
+                labels: ['Income', 'Expense'],
+                datasets: [{
+                    data: [incomes, expenses],
+                    backgroundColor: ['#36A2EB', '#FF6384'],
+                    hoverBackgroundColor: ['#36A2EB', '#FF6384']
+                }]
+            };
+
+            const options = {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    }
+                }
+            };
+
+            new Chart(pieChartCanvas, {
+                type: 'pie',
+                data: data,
+                options: options
+            });
+        }
+
+        function saveTransactions() {
+            localStorage.setItem('transactions', JSON.stringify(transactions));
+        }
+
+        function deleteTransaction(index) {
+            transactions.splice(index, 1);
+            saveTransactions();
+            updateTransactionList();
+            updateMonthlySummary();
+        }
+
+        function editTransaction(index) {
+            const transaction = transactions[index];
+            descriptionInput.value = transaction.description;
+            amountInput.value = transaction.amount;
+            categoryInput.value = transaction.category;
+            typeInput.value = transaction.type;
+
+            transactions.splice(index, 1);
+            saveTransactions();
+            updateTransactionList();
+            updateMonthlySummary();
+        }
+
+        form.addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            const description = descriptionInput.value;
+            const amount = parseFloat(amountInput.value);
+            const category = categoryInput.value;
+            const type = typeInput.value;
+
+            if (description && !isNaN(amount)) {
+                const transaction = { description, amount, category, type };
+                transactions.push(transaction);
+                saveTransactions();
+                updateTransactionList();
+                updateMonthlySummary();
+
+                descriptionInput.value = '';
+                amountInput.value = '';
+            }
+        });
+
+        toggleThemeButton.addEventListener('click', function() {
+            document.body.classList.toggle('dark-mode');
+            document.body.classList.remove('light-mode', 'custom-mode');
+        });
+
+        customThemeButton.addEventListener('click', function() {
+            document.body.classList.toggle('custom-mode');
+            document.body.classList.remove('dark-mode', 'light-mode');
+        });
+
+        updateTransactionList();
+        updateMonthlySummary();
+    </script>
 </body>
 </html>
+
