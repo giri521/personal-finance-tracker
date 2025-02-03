@@ -1,0 +1,66 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    transition: background-color 0.3s;
+}
+
+.container {
+    width: 100%;
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 20px;
+    text-align: center;
+}
+
+h1 {
+    margin-bottom: 20px;
+}
+
+form input, form select {
+    padding: 10px;
+    margin: 5px;
+    width: 80%;
+}
+
+button {
+    padding: 10px 20px;
+    margin-top: 10px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #45a049;
+}
+
+.savings p {
+    font-size: 1.5em;
+    font-weight: bold;
+}
+
+#pie-chart {
+    max-width: 100%;
+    height: auto;
+    margin-top: 20px;
+}
+
+button#toggle-theme {
+    margin-top: 20px;
+    background-color: #555;
+    color: white;
+}
+
+.dark-mode {
+    background-color: #333;
+    color: white;
+}
+
+.dark-mode input, .dark-mode select, .dark-mode button {
+    background-color: #444;
+    color: white;
+    border: none;
+}
