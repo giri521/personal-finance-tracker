@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personal Finance Tracker</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>Personal Finance Tracker</h1>
+        
+        <!-- Income and Expense Form -->
+        <form id="finance-form">
+            <input type="text" id="description" placeholder="Description" required>
+            <input type="number" id="amount" placeholder="Amount" required>
+            <select id="type">
+                <option value="income">Income</option>
+                <option value="expense">Expense</option>
+            </select>
+            <button type="submit">Add</button>
+        </form>
+
+        <!-- Monthly Savings -->
+        <div class="savings">
+            <h2>Monthly Savings</h2>
+            <p id="monthly-savings">$0</p>
+        </div>
+
+        <!-- Pie Chart -->
+        <canvas id="pie-chart"></canvas>
+
+        <!-- Dark Mode Toggle -->
+        <button id="toggle-theme">Toggle Dark Mode</button>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
